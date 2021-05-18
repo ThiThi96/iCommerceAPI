@@ -7,6 +7,7 @@ const userActivityBusiness = require('@/bll/user-activity-business');
 jest.mock('@/bll/product-business', () => ({
   getProducts: jest.fn(),
   getProductsByKeyword: jest.fn(),
+  getProductById: jest.fn(),
 }));
 
 jest.mock('@/bll/user-activity-business', () => ({
@@ -235,9 +236,52 @@ describe('ProductController', () => {
     });
   });
 
-  //   describe('GetProductById', () => {
+  describe('GetProductById', () => {
+    it('should call productBusiness.getProductById and userActivityBusiness.addActivity correctly when id, visitorId are provided', async () => {
+      // arrange
+      const req = {
+        params: { id: 1 },
+        query: { visitorId: 1234 },
+        originalUrl: '/api/test',
+      };
+      const res = {
+        send: jest.fn(),
+      };
 
-  //   });
+      productBusiness.getProductById.mockImplementation(() => Promise.resolve({ id: 1, name: 'sunny dress' }));
+      userActivityBusiness.addActivity.mockImplementation(() => Promise.resolve({ id: 1, actionId: 2 }));
+
+      // act
+      await productController.getProductById(req, res);
+
+      // assert
+      expect(userActivityBusiness.addActivity).toHaveBeenCalledWith(1234, '/api/test', 'view product detail');
+      expect(productBusiness.getProductById).toHaveBeenCalledWith(1);
+      expect(res.send).toHaveBeenCalledWith({ id: 1, name: 'sunny dress' });
+    });
+    it('should call productBusiness.getProductById and userActivityBusiness.addActivity(with null visitorId) correctly when id is specified', async () => {
+      // arrange
+      const req = {
+        params: { id: 1 },
+        query: { },
+        originalUrl: '/api/test',
+      };
+      const res = {
+        send: jest.fn(),
+      };
+
+      productBusiness.getProductById.mockImplementation(() => Promise.resolve({ id: 1, name: 'sunny dress' }));
+      userActivityBusiness.addActivity.mockImplementation(() => Promise.resolve({ id: 1, actionId: 2 }));
+
+      // act
+      await productController.getProductById(req, res);
+
+      // assert
+      expect(userActivityBusiness.addActivity).toHaveBeenCalledWith(null, '/api/test', 'view product detail');
+      expect(productBusiness.getProductById).toHaveBeenCalledWith(1);
+      expect(res.send).toHaveBeenCalledWith({ id: 1, name: 'sunny dress' });
+    });
+  });
   afterEach(() => {
     jest.clearAllMocks();
   });

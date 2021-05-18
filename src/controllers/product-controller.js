@@ -27,7 +27,8 @@ module.exports = {
     return res.send(products);
   },
   async getProductById(req, res) {
-    const { id, visitorId } = req.params;
+    const { id } = req.params;
+    const { visitorId } = req.query;
     await userActivityBusiness.addActivity(visitorId || null, req.originalUrl, 'view product detail');
     const result = await productBusiness.getProductById(id);
     return res.send(result);
